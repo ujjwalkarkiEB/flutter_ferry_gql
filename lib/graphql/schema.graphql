@@ -1,0 +1,29 @@
+"""Exposes a URL that specifies the behavior of this scalar."""
+directive @specifiedBy(
+  """The URL that specifies the behavior of this scalar."""
+  url: String!
+) on SCALAR
+
+input AuthInput {
+  email: String
+  password: String
+}
+
+type Mutation {
+  signUp(input: AuthInput): Token
+  signIn(input: AuthInput): Token
+}
+
+type Query {
+  currentUser: User
+}
+
+type Token {
+  token: String!
+}
+
+type User {
+  id: ID
+  email: String
+}
+
