@@ -1,26 +1,33 @@
-import 'package:auhentication_gql/core/utils/resources/data_state.dart';
-import 'package:auhentication_gql/features/home/data/repository/user_repository.dart';
+import 'package:auhentication_gql/common/model/user.dart';
+import 'package:auhentication_gql/core/error/failure/failure.dart';
+import 'package:auhentication_gql/features/home/repository/home_repositiory.dart';
 import 'package:bloc/bloc.dart';
+import 'package:dartz/dartz.dart';
+import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
-import 'package:meta/meta.dart';
 
 part 'home_event.dart';
 part 'home_state.dart';
 
 @injectable
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
-  final UserRepository _userRepository;
-  HomeBloc(this._userRepository) : super(HomeInitial()) {
-    on<HomeDataFetchRequest>((event, emit) async {
+  HomeBloc(this._homeRepositiory) : super(HomeInitial()) {
+    on<HomeDataFetchRequest>(
+        (HomeDataFetchRequest event, Emitter<HomeState> emit) async {
       emit(HomeDataFetching());
 
-      final data = await _userRepository.getUserData();
-      if (data is DataSucces) {
-        final userData = data.data!;
-        emit(HomeDataLoaded(userId: userData.id!, email: userData.email!));
-      } else {
-        emit(HomeDataLoadingError());
-      }
+      final Either<Failure, User> data =
+          await _homeRepositiory.getCurrentUserData();
+
+      data.fold(
+        (Failure l) {
+          emit(HomeDataLoadingError());
+        },
+        (User r) {
+          emit(HomeDataLoaded(userId: r.id, email: r.email!));
+        },
+      );
     });
   }
+  final HomeRepositiory _homeRepositiory;
 }

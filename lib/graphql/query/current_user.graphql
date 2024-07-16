@@ -1,6 +1,0 @@
-query GetCurrentAuthenticatedUserDetails{
-   currentUser {
-    id
-    email
-  }
-}

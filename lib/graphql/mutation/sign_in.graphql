@@ -1,5 +1,0 @@
-mutation SignInUser ($input: AuthInput) {
-  signIn(input: $input) {
-    token
-  }
-}

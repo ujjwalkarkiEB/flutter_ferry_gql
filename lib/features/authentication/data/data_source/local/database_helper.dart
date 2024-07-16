@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:auhentication_gql/core/utils/constants/stribg_constants.dart';
+import 'package:auhentication_gql/core/utils/constants/string_constants.dart';
 import 'package:hive/hive.dart';
 import 'package:injectable/injectable.dart';
 import 'package:path_provider/path_provider.dart';

@@ -1,67 +1,66 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:developer';
+import 'package:auhentication_gql/core/error/exception/exception.dart';
+import 'package:auhentication_gql/core/network/client/graphql_client.dart';
+import 'package:auhentication_gql/graphql/mutation/authentication/gql_g_files/sign_in.data.gql.dart';
+import 'package:auhentication_gql/graphql/mutation/authentication/gql_g_files/sign_in.req.gql.dart';
+import 'package:auhentication_gql/graphql/mutation/authentication/gql_g_files/sign_in.var.gql.dart';
+import 'package:auhentication_gql/graphql/mutation/authentication/gql_g_files/sign_up.data.gql.dart';
+import 'package:auhentication_gql/graphql/mutation/authentication/gql_g_files/sign_up.var.gql.dart';
 
-import 'package:auhentication_gql/core/utils/resources/data_state.dart';
-import 'package:auhentication_gql/graphql/graphql_client.dart';
-import 'package:auhentication_gql/graphql/mutation/gql_g_files/sign_up.req.gql.dart';
+import 'package:ferry_exec/src/operation_response.dart';
 import 'package:injectable/injectable.dart';
-
-import '../../../../../graphql/mutation/gql_g_files/sign_in.req.gql.dart';
+import '../../../../../graphql/mutation/authentication/gql_g_files/sign_up.req.gql.dart';
 
 @lazySingleton
 class UserApiService {
   UserApiService({required this.gqlClient});
 
-  final GraphqlUserClient gqlClient;
+  final GraphqlClient gqlClient;
 
-  Future<DataState<String, String>> signInUser(
+  Future<String> signInUser(
       {required String email, required String password}) async {
-    try {
-      late final String refreshToken;
-      String? errorMsg;
+    final GLoginReq signInReq = GLoginReq((GLoginReqBuilder b) => b
+      ..vars.input.email = email
+      ..vars.input.password = password);
 
-      final GSignInUserReq signInReq = GSignInUserReq((b) => b
-        ..vars.input.email = email
-        ..vars.input.password = password);
-      final Completer<void> completer = Completer<void>();
+    final OperationResponse<GLoginData, GLoginVars> response =
+        await gqlClient.client.request(signInReq).first;
 
-      gqlClient.client.request(signInReq).listen((response) {
-        if (response.data!.signIn == null) {
-          errorMsg = response.graphqlErrors!.first.message;
-        } else {
-          refreshToken = response.data!.signIn!.token;
-        }
-        completer.complete();
-      });
-      await completer.future;
-      if (errorMsg != null) {
-        return DataError(errorMsg!);
-      }
-      return DataSucces(refreshToken);
-    } catch (e) {
-      throw Exception('Signup Failed" ${e.toString()}');
+    if (response.hasErrors) {
+      log('resp: ${response.graphqlErrors?.first.extensions}');
+      final String? errorMsg = response.graphqlErrors?.first.message;
+      throw ServerException(errorMsg ?? 'Something went wrong!');
     }
+    final String refreshToken = response.data!.login!.refreshToken;
+    final String accessToken = response.data!.login!.accessToken;
+
+    return json.encode(<String, String>{
+      'accessToken': accessToken,
+      'refreshToken': refreshToken
+    });
   }
 
-  Future<String> signUpUser(
+  Future<void> signUpUser(
       {required String email, required String password}) async {
     try {
-      late final accessToken;
-      final signUpReq = GSignUpUserReq((b) => b
-        ..vars.input.email = email
-        ..vars.input.password = password);
-      final Completer<void> completer = Completer<void>();
+      String? errorMsg;
 
-      gqlClient.client.request(signUpReq).listen((response) {
-        print('resp: $response');
-        accessToken = response.data!.signUp!.token;
-        completer.complete();
-      });
+      final GSignUpUserReq signUpReq =
+          GSignUpUserReq((GSignUpUserReqBuilder b) => b
+            ..vars.input.email = email
+            ..vars.input.password = password
+            ..vars.input.repeatPassword = password);
 
-      await completer.future;
-
-      return accessToken;
+      final OperationResponse<GSignUpUserData, GSignUpUserVars> response =
+          await gqlClient.client.request(signUpReq).first;
+      if (response.data!.register == null) {
+        errorMsg = response.graphqlErrors?.first.message;
+        throw ServerException(errorMsg ?? 'Unknown server error');
+      }
     } catch (e) {
-      throw Exception('SigIn Failed" ${e.toString()}');
+      throw UnknownErrorException();
     }
   }
 }

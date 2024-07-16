@@ -1,62 +1,65 @@
-import 'package:auhentication_gql/core/utils/resources/data_state.dart';
-import 'package:auhentication_gql/features/authentication/data/data_source/local/database_service.dart';
-import 'package:auhentication_gql/features/authentication/data/data_source/remote/user_api_service.dart';
+import 'dart:convert';
+import 'dart:developer';
+
+import 'package:auhentication_gql/core/error/exception/exception.dart';
+import 'package:auhentication_gql/core/utils/helpers/token_manager.dart';
+import 'package:auhentication_gql/features/authentication/data/data_source/remote/auth_api_service.dart';
+import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../common/injection/injection.dart';
-import '../../../../core/utils/constants/stribg_constants.dart';
-import '../../../../graphql/graphql_client.dart';
+import '../../../../core/error/failure/failure.dart';
+import '../../../../core/utils/constants/string_constants.dart';
 
 @lazySingleton
 class AuthenticationRepository {
-  final DatabaseService _databaseService;
-  final UserApiService _userApiService;
-
   AuthenticationRepository(
-      {required DatabaseService databaseService,
+      {required TokenManager tokenManager,
       required UserApiService userApiService})
-      : _databaseService = databaseService,
+      : _tokenManager = tokenManager,
         _userApiService = userApiService;
+  final UserApiService _userApiService;
+  final TokenManager _tokenManager;
 
   /// Authenticates user using [email] and [password].
   ///  Stores the token recieved in the database.
-  /// Returns success and error String msg.
-  Future<DataState<String, String>> signInUser(
+  /// Returns [Either] type with error msg wrapped in [Failure] otherwise null to mark success.
+  Future<Either<Failure, void>> signInUser(
       {required String email, required String password}) async {
     try {
-      final data =
+      final String encodedTokens =
           await _userApiService.signInUser(email: email, password: password);
 
-      if (data is DataError) {
-        return DataError(data.error!);
-      }
-      await _databaseService.storeToken(accessToken: data.data);
-      // create new graphql client to pass accessToken in the header
-      await getIt<GraphqlUserClient>().initializeGraphqlClient(
-          url: StringConstants.baseUrl, hasToken: true);
+      final Map<String, dynamic> tokens = json.decode(encodedTokens);
+      final String? accessToken = tokens[StringConstants.accessTokenKey];
+      final String? refreshToken = tokens[StringConstants.refreshTokenKey];
 
-      return DataSucces("Credentials are matched!");
+      await _tokenManager.storeToken(
+          accessToken: accessToken!, refreshToken: refreshToken!);
+
+      return right(null);
+    } on ServerException catch (e) {
+      return left(ServerFailure(e.message!));
     } catch (e) {
-      throw Exception('SignIn Failed" ${e.toString()}');
+      log('Signin unexpected error! ${e.toString()}');
+      return left(UnknownFailure('An unexpected error occurred'));
     }
   }
 
   Future<void> signUpUser(
       {required String email, required String password}) async {
     try {
-      final String refreshToken =
-          await _userApiService.signUpUser(email: email, password: password);
-
-      await _databaseService.storeToken(refreshToken: refreshToken);
+      await _userApiService.signUpUser(email: email, password: password);
+    } on ServerException catch (e) {
+      throw e.message!;
     } catch (e) {
-      throw Exception('Signup Failed" ${e.toString()}');
+      throw 'Unknown error occured!';
     }
   }
 
   /// clears stored tokens to mark the user to be loggedout
   Future<void> logoutUser() async {
     try {
-      await _databaseService.clearToken();
+      await _tokenManager.clearTokens();
     } catch (e) {
       throw Exception('Logout Failed" ${e.toString()}');
     }

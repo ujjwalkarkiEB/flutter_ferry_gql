@@ -6,7 +6,7 @@ void showFlashError(BuildContext context, String message) {
       content: SizedBox(
         height: 30, // Adjust the height as needed
         child: Row(
-          children: [
+          children: <Widget>[
             const Icon(Icons.error, color: Colors.white),
             const SizedBox(width: 10),
             Expanded(

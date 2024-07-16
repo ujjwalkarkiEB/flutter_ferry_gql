@@ -1,29 +1,66 @@
-"""Exposes a URL that specifies the behavior of this scalar."""
-directive @specifiedBy(
-  """The URL that specifies the behavior of this scalar."""
-  url: String!
-) on SCALAR
-
-input AuthInput {
+type User {
+  _id: ID
+  userName: String
   email: String
-  password: String
+  followers: [User]
+  following: [User]
+  isEmailVerified: Boolean
+  role: String
+  blockUser: Boolean
+  mfaEnabled: Boolean
+  userPostCount: Int
 }
 
-type Mutation {
-  signUp(input: AuthInput): Token
-  signIn(input: AuthInput): Token
+type Post {
+  _id: ID!
+  title: String!
+  description: String
+}
+
+type UserPost {
+  _id: ID
+  user: User
+  title: String
+  description: String
+  commentCount: Int
+  likeCount: Int
+  image: String
+  createdAt: String
+  updatedAt: String
+}
+
+input UserPostContent {
+  title: String!
+  description: String
+}
+
+input SingUpInput {
+  userName: String!
+  email: String!
+  password: String!
+  repeatPassword: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+type LoginResponse {
+  accessToken: String!
+  refreshToken: String!
+  data: User!
 }
 
 type Query {
-  currentUser: User
+  listUserPosts: [UserPost]
+  getLoggedInUser: User
+  getPostById(postId: String): UserPost
 }
 
-type Token {
-  token: String!
+type Mutation {
+  createPost(input: UserPostContent!): Post
+  register(input: SingUpInput!): User
+  login(input: LoginInput!): LoginResponse
+  refreshToken(refreshToken: String!): String
 }
-
-type User {
-  id: ID
-  email: String
-}
-

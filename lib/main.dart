@@ -4,11 +4,10 @@ import 'package:auhentication_gql/features/authentication/presentation/bloc/auth
 import 'package:auhentication_gql/features/authentication/presentation/screens/authentication.dart';
 import 'package:auhentication_gql/features/home/presentation/bloc/home_bloc.dart';
 import 'package:auhentication_gql/features/home/presentation/pages/home.dart';
-import 'package:auhentication_gql/graphql/graphql_client.dart';
-import 'package:auhentication_gql/core/utils/constants/stribg_constants.dart';
 import 'package:auhentication_gql/features/authentication/data/data_source/local/database_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nested/nested.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,40 +17,37 @@ void main() async {
   await getIt<DatabaseHelper>().initializeLocalDatabase();
 
   // check if user is previously logged in
-  final hasToken = await getIt<TokenManager>().doesAccessTokenExist();
-  if (hasToken) {
-    await getIt<GraphqlUserClient>()
-        .initializeGraphqlClient(url: StringConstants.baseUrl, hasToken: true);
-  } else {
-    await getIt<GraphqlUserClient>()
-        .initializeGraphqlClient(url: StringConstants.baseUrl);
-  }
+  final bool hasToken = await getIt<TokenManager>().doesAccessTokenExist();
 
   runApp(MyApp(hasToken: hasToken));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key, required this.hasToken});
+  const MyApp({required this.hasToken, super.key});
   final bool hasToken;
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (context) => getIt<AuthBloc>(),
+      providers: <SingleChildWidget>[
+        BlocProvider<AuthBloc>(
+          create: (BuildContext context) => getIt<AuthBloc>(),
         ),
-        BlocProvider(
-          create: (context) => getIt<HomeBloc>()..add(HomeDataFetchRequest()),
+        BlocProvider<HomeBloc>(
+          create: (BuildContext context) =>
+              // getIt<HomeBloc>()..add(HomeDataFetchRequest()),
+              getIt<HomeBloc>(),
         ),
       ],
       child: MaterialApp(
+        // navigatorKey: navigatorKey,
         title: 'Flutter Demo',
+        debugShowCheckedModeBanner: false,
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
-        home: hasToken ? HomeScreen() : AuthenticationScreen(),
+        home: hasToken ? const HomeScreen() : const AuthenticationScreen(),
       ),
     );
   }

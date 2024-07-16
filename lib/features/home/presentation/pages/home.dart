@@ -7,37 +7,46 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<HomeBloc>().add(HomeDataFetchRequest());
+  }
 
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
+      listener: (BuildContext context, AuthState state) {
         if (state is AuthLogout) {
           Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(
-                builder: (_) => AuthenticationScreen(),
+              MaterialPageRoute<dynamic>(
+                builder: (_) => const AuthenticationScreen(),
               ),
-              (router) => false);
+              (Route<dynamic> router) => false);
         }
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Home Screen'),
-          actions: [
+          title: const Text('Home Screen'),
+          actions: <Widget>[
             IconButton(
-                onPressed: () {
-                  context.read<AuthBloc>().add(AuthLogoutRequested());
-                },
-                icon: Icon(Icons.exit_to_app))
+              onPressed: () {
+                context.read<AuthBloc>().add(AuthLogoutRequested());
+              },
+              icon: const Icon(Icons.exit_to_app),
+            )
           ],
         ),
-        body: BlocConsumer<HomeBloc, HomeState>(
-          listenWhen: (previous, current) =>
-              previous.runtimeType != current.runtimeType,
-          listener: (context, state) {},
-          builder: (context, state) {
+        body: BlocBuilder<HomeBloc, HomeState>(
+          builder: (BuildContext context, HomeState state) {
             if (state is HomeDataFetching) {
               return Center(
                 child: Platform.isAndroid
@@ -53,7 +62,7 @@ class HomeScreen extends StatelessWidget {
                   width: MediaQuery.of(context).size.width * 0.5,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                    children: <Widget>[
                       Text('UserdID : ${state.userId}'),
                       Text('EMAIL : ${state.email}'),
                     ],
@@ -63,11 +72,24 @@ class HomeScreen extends StatelessWidget {
             }
 
             if (state is HomeDataLoadingError) {
-              Center(
-                child: Text('Failed to load data'),
+              return Center(
+                child: AlertDialog(
+                  backgroundColor: Colors.pink.shade100,
+                  content: const Text('Retry Login'),
+                  title: const Text('Failed to load data!'),
+                  actions: <Widget>[
+                    ElevatedButton(
+                      onPressed: () {
+                        context.read<AuthBloc>().add(AuthLogoutRequested());
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('Logout'),
+                    )
+                  ],
+                ),
               );
             }
-            return Center(
+            return const Center(
               child: Text('Something went wrong!'),
             );
           },

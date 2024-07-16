@@ -1,0 +1,7 @@
+query GetLoggedInUserData{
+   getLoggedInUser {
+    _id
+    userName
+    email
+  }
+}

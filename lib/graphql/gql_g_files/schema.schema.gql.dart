@@ -9,24 +9,73 @@ import 'package:built_value/serializer.dart';
 
 part 'schema.schema.gql.g.dart';
 
-abstract class GAuthInput implements Built<GAuthInput, GAuthInputBuilder> {
-  GAuthInput._();
+abstract class GUserPostContent
+    implements Built<GUserPostContent, GUserPostContentBuilder> {
+  GUserPostContent._();
 
-  factory GAuthInput([void Function(GAuthInputBuilder b) updates]) =
-      _$GAuthInput;
+  factory GUserPostContent([void Function(GUserPostContentBuilder b) updates]) =
+      _$GUserPostContent;
 
-  String? get email;
-  String? get password;
-  static Serializer<GAuthInput> get serializer => _$gAuthInputSerializer;
+  String get title;
+  String? get description;
+  static Serializer<GUserPostContent> get serializer =>
+      _$gUserPostContentSerializer;
 
   Map<String, dynamic> toJson() => (_i1.serializers.serializeWith(
-        GAuthInput.serializer,
+        GUserPostContent.serializer,
         this,
       ) as Map<String, dynamic>);
 
-  static GAuthInput? fromJson(Map<String, dynamic> json) =>
+  static GUserPostContent? fromJson(Map<String, dynamic> json) =>
       _i1.serializers.deserializeWith(
-        GAuthInput.serializer,
+        GUserPostContent.serializer,
+        json,
+      );
+}
+
+abstract class GSingUpInput
+    implements Built<GSingUpInput, GSingUpInputBuilder> {
+  GSingUpInput._();
+
+  factory GSingUpInput([void Function(GSingUpInputBuilder b) updates]) =
+      _$GSingUpInput;
+
+  String get userName;
+  String get email;
+  String get password;
+  String get repeatPassword;
+  static Serializer<GSingUpInput> get serializer => _$gSingUpInputSerializer;
+
+  Map<String, dynamic> toJson() => (_i1.serializers.serializeWith(
+        GSingUpInput.serializer,
+        this,
+      ) as Map<String, dynamic>);
+
+  static GSingUpInput? fromJson(Map<String, dynamic> json) =>
+      _i1.serializers.deserializeWith(
+        GSingUpInput.serializer,
+        json,
+      );
+}
+
+abstract class GLoginInput implements Built<GLoginInput, GLoginInputBuilder> {
+  GLoginInput._();
+
+  factory GLoginInput([void Function(GLoginInputBuilder b) updates]) =
+      _$GLoginInput;
+
+  String get email;
+  String get password;
+  static Serializer<GLoginInput> get serializer => _$gLoginInputSerializer;
+
+  Map<String, dynamic> toJson() => (_i1.serializers.serializeWith(
+        GLoginInput.serializer,
+        this,
+      ) as Map<String, dynamic>);
+
+  static GLoginInput? fromJson(Map<String, dynamic> json) =>
+      _i1.serializers.deserializeWith(
+        GLoginInput.serializer,
         json,
       );
 }

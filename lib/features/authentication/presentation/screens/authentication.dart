@@ -1,6 +1,3 @@
-import 'package:auhentication_gql/common/injection/injection.dart';
-import 'package:auhentication_gql/core/utils/constants/stribg_constants.dart';
-import 'package:auhentication_gql/graphql/graphql_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
@@ -19,31 +16,32 @@ class AuthenticationScreen extends StatefulWidget {
 }
 
 class _AuthenticationScreenState extends State<AuthenticationScreen> {
-  var isSignUp = false;
+  bool isSignUp = false;
 
-  var email = '';
-  var psw = '';
-  var repeatPsw = '';
-  var userName = '';
-  var hidePsw = true;
+  String email = '';
+  String psw = '';
+  String repeatPsw = '';
+  String userName = '';
+  bool hidePsw = true;
 
-  final formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
+      listener: (BuildContext context, AuthState state) {
         if (state is AuthSuccess) {
           if (isSignUp) {
             showSuccessSnackbar(
                 context, 'Account has been created successfully!');
           } else {
             Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const HomeScreen(),
-                ),
-                (router) => false);
+              context,
+              MaterialPageRoute<dynamic>(
+                builder: (BuildContext context) => const HomeScreen(),
+              ),
+              (Route<dynamic> router) => false,
+            );
           }
         }
         if (state is AuthError) {
@@ -57,7 +55,7 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
       child: Scaffold(
         body: Padding(
           padding: const EdgeInsets.all(14.0),
-          child: Stack(children: [
+          child: Stack(children: <Widget>[
             // --- form -----
             Align(
               alignment: Alignment.center,
@@ -72,7 +70,7 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                    children: <Widget>[
                       Text(
                         isSignUp ? 'SIGN UP' : 'LOGIN',
                         style: Theme.of(context).textTheme.titleMedium,
@@ -93,13 +91,13 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(20),
                             )),
-                        validator: (value) {
+                        validator: (String? value) {
                           if (!(value!.contains('@'))) {
                             return 'Email is Invalid';
                           }
                           return null;
                         },
-                        onSaved: (newValue) {
+                        onSaved: (String? newValue) {
                           email = newValue!;
                         },
                       ),
@@ -122,13 +120,13 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
                               child: Icon(
                                   hidePsw ? Iconsax.eye_slash : Iconsax.eye)),
                         ),
-                        validator: (value) {
+                        validator: (String? value) {
                           if ((value!.isEmpty || value.trim().length < 9)) {
                             return 'password  must be at least 9 characters';
                           }
                           return null;
                         },
-                        onSaved: (newValue) {
+                        onSaved: (String? newValue) {
                           psw = newValue!;
                         },
                       ),
@@ -152,14 +150,14 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
                                 child: Icon(
                                     hidePsw ? Iconsax.eye_slash : Iconsax.eye)),
                           ),
-                          validator: (value) {
+                          validator: (String? value) {
                             if ((value!.isEmpty || value.trim().length < 9)) {
                               return 'password  must be at least 9 characters';
                             }
 
                             return null;
                           },
-                          onSaved: (newValue) {
+                          onSaved: (String? newValue) {
                             repeatPsw = newValue!;
                           },
                         ),
@@ -185,9 +183,9 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
                                   AuthSignInButtonPressed(
                                       email: email, password: psw));
                             }
-                            formKey.currentState!.reset();
+                            // formKey.currentState!.reset();
                           }, child: BlocBuilder<AuthBloc, AuthState>(
-                            builder: (context, state) {
+                            builder: (BuildContext context, AuthState state) {
                               if (state is AuthLoading) {
                                 return const SizedBox(
                                     height: 20,
@@ -208,7 +206,7 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
                 alignment: Alignment.bottomRight,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+                  children: <Widget>[
                     Text(isSignUp
                         ? 'Already have an account !'
                         : 'Don\'t have account ?'),

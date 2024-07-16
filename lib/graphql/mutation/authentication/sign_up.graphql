@@ -1,0 +1,5 @@
+mutation SignUpUser ($input: SingUpInput) {
+  register(input: $input) {
+  _id
+  }
+}

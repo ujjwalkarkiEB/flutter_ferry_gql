@@ -1,8 +1,9 @@
-import 'package:auhentication_gql/core/utils/resources/data_state.dart';
+import 'package:auhentication_gql/core/error/failure/failure.dart';
 import 'package:auhentication_gql/features/authentication/data/repository/authentication_repository.dart';
 import 'package:bloc/bloc.dart';
+import 'package:dartz/dartz.dart';
+import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
-import 'package:meta/meta.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
@@ -38,19 +39,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       AuthSignInButtonPressed event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
 
-    final data = await _authenticationRepository.signInUser(
-        email: event.email, password: event.password);
+    final Either<Failure, void> resp = await _authenticationRepository
+        .signInUser(email: event.email, password: event.password);
 
-    if (data is DataError) {
-      emit(AuthError(errorMsg: data.error!));
-      return;
-    }
-    emit(AuthSuccess());
-  }
-
-  @override
-  void onTransition(Transition<AuthEvent, AuthState> transition) {
-    super.onTransition(transition);
-    print(transition);
+    resp.fold(
+      (Failure l) => emit(AuthError(errorMsg: l.failureMsg)),
+      (void r) {
+        emit(AuthSuccess());
+      },
+    );
   }
 }

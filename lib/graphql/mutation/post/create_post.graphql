@@ -1,0 +1,5 @@
+mutation createPost($input: UserPostContent) {
+    createPost(input: $input) {
+        _id
+    }
+}
